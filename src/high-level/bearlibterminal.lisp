@@ -126,6 +126,19 @@
   (blt/ll:terminal-delay (truncate (* seconds 1000))))
 
 
+(defun terminal-put-char (x y char)
+  (blt/ll:terminal-put x y (char-code char)))
+
+(defun terminal-put-code (x y code-point)
+  (blt/ll:terminal-put x y code-point))
+
+(defun terminal-width ()
+  (blt/ll:terminal-state blt/ll:+tk-width+))
+
+(defun terminal-height ()
+  (blt/ll:terminal-state blt/ll:+tk-height+))
+
+
 ;;;; Higher-Level API ---------------------------------------------------------
 (defmacro defuck-floats (&body body)
   #+sbcl
