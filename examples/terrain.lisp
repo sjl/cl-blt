@@ -98,31 +98,36 @@
 
 ;;;; GUI ----------------------------------------------------------------------
 (defun terrain-char (height)
-  (cond ((< height 0.4) #\~)
-        ((< height 0.7) #\.)
+  (cond ((< height 0.2) #\#)
+        ((< height 0.4) #\#)
+        ((< height 0.7) #\#)
         ((< height 0.9) #\#)
-        (t #\*)))
+        (t              #\#)))
 
 (defparameter *heightmap* (allocate-heightmap))
 
 (defun draw ()
   (iterate
-    (for-nested ((x :from 0 :below (blt::terminal-width))
-                 (y :from 0 :below (blt::terminal-height))))
-    (blt::terminal-put-char x y (terrain-char (aref *heightmap* x y))))
-  (blt::terminal-refresh))
+    (for-nested ((x :from 0 :below (min +world-size+ (blt:width)))
+                 (y :from 0 :below (min +world-size+ (blt:height)))))
+    (for height = (aref *heightmap* x y))
+    (setf
+      (blt:color) (blt:rgbaf height height height 1.0)
+      (blt:cell-char x y) (terrain-char height)))
+  ; (blt:print 1 1 "Demo!")
+  (blt:refresh))
 
 (defun config ()
-  (blt::terminal-set "window.resizeable = true")
-  (blt::terminal-set "window.cellsize = 10x10")
-  (blt::terminal-set "window.title = Terrain Gen Demo"))
+  (blt:set "window.resizeable = true")
+  (blt:set "window.cellsize = 10x10")
+  (blt:set "window.title = Terrain Gen Demo"))
 
 (defun main ()
-  (blt::with-terminal
-    (config)
+  (blt:with-terminal
     (iterate
+      (config)
       (draw)
-      (blt::key-case (blt::terminal-read)
+      (blt:key-case (blt:read)
         (:space (diamond-square *heightmap*))
         (:escape (return))
         (:close (return))))))

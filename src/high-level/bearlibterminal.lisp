@@ -3,6 +3,8 @@
 ; (sb-int:set-floating-point-modes :traps nil)
 
 ;;;; Utils --------------------------------------------------------------------
+(declaim (inline color-float-to-byte rgba rgbaf))
+
 (defun pr (val)
   (format t "~S~%" val)
   (finish-output)
@@ -22,14 +24,35 @@
      <>))
 
 
+(deftype color-float ()
+  '(single-float 0.0 1.0))
+
+(deftype color-byte ()
+  '(unsigned-byte 8))
+
+(deftype color ()
+  '(unsigned-byte 32))
+
+
+(defun color-float-to-byte (float)
+  (truncate (* float 255.0)))
+
 (defun rgba (r g b a)
   (-<> 0
-    (dpb a (byte 2 6) <>)
-    (dpb r (byte 2 4) <>)
-    (dpb g (byte 2 2) <>)
-    (dpb b (byte 2 0) <>)))
+    (dpb a (byte 8 24) <>)
+    (dpb r (byte 8 16) <>)
+    (dpb g (byte 8 8) <>)
+    (dpb b (byte 8 0) <>)))
 
-(defun name (color-name)
+(defun rgbaf (r g b a)
+  (declare (optimize speed)
+           (type color-float r g b a))
+  (rgba (color-float-to-byte r)
+        (color-float-to-byte g)
+        (color-float-to-byte b)
+        (color-float-to-byte a)))
+
+(defun color-name (color-name)
   (blt/ll:color-from-name color-name))
 
 
@@ -51,6 +74,17 @@
   (int-to-boolean (blt/ll:terminal-state state)))
 
 
+(defun character-to-code-point (character)
+  ;; These seem to work in SBCL, ABCL, CCL, and ECL, but I need to do more
+  ;; digging before I'm convinced.
+  (char-code character))
+
+(defun code-point-to-character (code-point)
+  ;; These seem to work in SBCL, ABCL, CCL, and ECL, but I need to do more
+  ;; digging before I'm convinced.
+  (code-char code-point))
+
+
 ;;;; Error Checking -----------------------------------------------------------
 (define-condition bearlibterminal-error (error) ())
 
@@ -60,83 +94,107 @@
 
 
 ;;;; Wrappers -----------------------------------------------------------------
-(defun terminal-open ()
+
+; Initialization and configuration: set
+; Output: put ext, measure
+; Input: read str
+
+(defun open ()
   (check (blt/ll:terminal-open)))
 
-(defun terminal-close ()
+(defun close ()
   (blt/ll:terminal-close))
 
-(defun terminal-set (configuration-string)
+(defun set (configuration-string)
   (check (blt/ll:terminal-set-8 configuration-string)))
 
 
-(defun terminal-refresh ()
+(defun refresh ()
   (blt/ll:terminal-refresh))
 
-(defun terminal-clear ()
+(defun clear ()
   (blt/ll:terminal-clear))
 
-(defun terminal-clear-area (x y width height)
+(defun clear-area (x y width height)
   (blt/ll:terminal-clear-area x y width height))
 
-(defun terminal-crop (x y width height)
+(defun crop (x y width height)
   (blt/ll:terminal-crop x y width height))
 
 
-(defun terminal-layer ()
+(defun layer ()
   (blt/ll:terminal-state blt/ll:+tk-layer+))
 
-(defun (setf terminal-layer) (new-value)
+(defun (setf layer) (new-value)
   (blt/ll:terminal-layer new-value)
   new-value)
 
 
-(defun terminal-color ()
+(defun color ()
   (blt/ll:terminal-state blt/ll:+tk-color+))
 
-(defun (setf terminal-color) (color)
+(defun (setf color) (color)
   (blt/ll:terminal-color color))
 
 
-(defun terminal-background-color ()
+(defun background-color ()
   (blt/ll:terminal-state blt/ll:+tk-bkcolor+))
 
-(defun (setf terminal-background-color) (color)
+(defun (setf background-color) (color)
   (blt/ll:terminal-bkcolor color))
 
 
-(defun terminal-composition ()
+(defun composition ()
   (onoff-to-boolean (blt/ll:terminal-state blt/ll:+tk-composition+)))
 
-(defun (setf terminal-composition) (new-value)
+(defun (setf composition) (new-value)
   (blt/ll:terminal-composition (boolean-to-onoff new-value))
   new-value)
 
 
-(defun terminal-has-input-p ()
+(defun has-input-p ()
   (int-to-boolean (blt/ll:terminal-has-input)))
 
-(defun terminal-read ()
+(defun read ()
   (blt/ll:terminal-read))
 
-(defun terminal-peek ()
+(defun peek ()
   (blt/ll:terminal-peek))
 
-(defun terminal-delay (seconds)
+(defun sleep (seconds)
   (blt/ll:terminal-delay (truncate (* seconds 1000))))
 
 
-(defun terminal-put-char (x y char)
-  (blt/ll:terminal-put x y (char-code char)))
-
-(defun terminal-put-code (x y code-point)
-  (blt/ll:terminal-put x y code-point))
-
-(defun terminal-width ()
+(defun width ()
   (blt/ll:terminal-state blt/ll:+tk-width+))
 
-(defun terminal-height ()
+(defun height ()
   (blt/ll:terminal-state blt/ll:+tk-height+))
+
+
+(defun cell-code (x y &optional (index 0))
+  (let ((code (blt/ll:terminal-pick x y index)))
+    (if (zerop code)
+      nil
+      code)))
+
+(defun cell-char (x y &optional (index 0))
+  (let ((code (cell-code x y index)))
+    (when code (code-point-to-character code))))
+
+
+(defun (setf cell-code) (code-point x y)
+  (blt/ll:terminal-put x y code-point))
+
+(defun (setf cell-char) (character x y)
+  (blt/ll:terminal-put x y (character-to-code-point character)))
+
+
+(defun cell-color (x y &optional (index 0))
+  (blt/ll:terminal-pick-color x y index))
+
+(defun cell-background-color (x y)
+  (blt/ll:terminal-pick-bkcolor x y))
 
 
 ;;;; Higher-Level API ---------------------------------------------------------
@@ -150,10 +208,10 @@
 
 (defmacro with-terminal (&body body)
   `(defuck-floats
-     (terminal-open)
+     (open)
      (unwind-protect
          (progn ,@body)
-       (terminal-close))))
+       (close))))
 
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -313,10 +371,10 @@
 (defun test ()
   (trivial-main-thread:with-body-in-main-thread (:blocking t)
     (with-terminal
-      (terminal-refresh)
-      (terminal-set "input.filter = [keyboard+, mouse+]")
+      (refresh)
+      (set "input.filter = [keyboard+, mouse+]")
       (loop
-        :for data = (terminal-read)
+        :for data = (read)
         :do (pr data)
         :while (key-case data
                  ((:a :down) (pr "A down") t)
