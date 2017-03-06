@@ -114,7 +114,12 @@
     (setf
       (blt:color) (blt:rgbaf height height height 1.0)
       (blt:cell-char x y) (terrain-char height)))
-  ; (blt:print 1 1 "Demo!")
+  (setf (blt:color) (blt:rgbaf 1.0 0.0 0.0 1.0))
+  (pr (multiple-value-list (blt:print 1 1 (format nil "Demo!~%There is a lot of text in this line, will BLT manage to word wrap everything properly?  We'll see!")
+                                      :width 50
+                                      :height 10
+                                      :halign :center
+                                      :valign :center)))
   (blt:refresh))
 
 (defun config ()

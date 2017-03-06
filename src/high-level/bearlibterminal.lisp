@@ -85,6 +85,21 @@
   (code-char code-point))
 
 
+(defun horizontal-alignment (alignment-keyword)
+  (ccase alignment-keyword
+    (:default          blt/ll:+tk-align-default+)
+    (:left             blt/ll:+tk-align-left+)
+    (:right            blt/ll:+tk-align-right+)
+    ((:middle :center) blt/ll:+tk-align-center+)))
+
+(defun vertical-alignment (alignment-keyword)
+  (ccase alignment-keyword
+    (:default          blt/ll:+tk-align-default+)
+    (:top              blt/ll:+tk-align-top+)
+    (:bottom           blt/ll:+tk-align-bottom+)
+    ((:middle :center) blt/ll:+tk-align-middle+)))
+
+
 ;;;; Error Checking -----------------------------------------------------------
 (define-condition bearlibterminal-error (error) ())
 
@@ -195,6 +210,25 @@
 
 (defun cell-background-color (x y)
   (blt/ll:terminal-pick-bkcolor x y))
+
+
+(defun print (x y string &key
+              width
+              height
+              (halign :default)
+              (valign :default))
+  (cffi:with-foreign-objects ((measured-width :int)
+                              (measured-height :int))
+    (blt/ll:terminal-print-ext-8 x y
+                                 (or width 0)
+                                 (or height 0)
+                                 (logior (horizontal-alignment halign)
+                                         (vertical-alignment valign))
+                                 string
+                                 measured-width
+                                 measured-height)
+    (values (cffi:mem-ref measured-width :int)
+            (cffi:mem-ref measured-height :int))))
 
 
 ;;;; Higher-Level API ---------------------------------------------------------

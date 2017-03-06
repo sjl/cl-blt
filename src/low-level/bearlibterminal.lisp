@@ -719,7 +719,7 @@
   (w :int)
   (h :int)
   (align :int)
-  (s :pointer)
+  (s :string)
   (out_w :pointer)
   (out_h :pointer))
 
@@ -752,7 +752,7 @@
 (cffi:defcfun ("terminal_measure_ext8" #.(swig-lispify "terminal_measure_ext8" 'function)) :void
   (w :int)
   (h :int)
-  (s :pointer)
+  (s :string)
   (out_w :pointer)
   (out_h :pointer))
 
@@ -792,7 +792,7 @@
 (cffi:defcfun ("terminal_read_str8" #.(swig-lispify "terminal_read_str8" 'function)) :int
   (x :int)
   (y :int)
-  (buffer :pointer)
+  (buffer :string)
   (max :int))
 
 (cl:export '#.(swig-lispify "terminal_read_str8" 'function))
@@ -822,9 +822,9 @@
 
 (cl:export '#.(swig-lispify "terminal_delay" 'function))
 
-(cffi:defcfun ("terminal_get8" #.(swig-lispify "terminal_get8" 'function)) :pointer
-  (key :pointer)
-  (default_ :pointer))
+(cffi:defcfun ("terminal_get8" #.(swig-lispify "terminal_get8" 'function)) :string
+  (key :string)
+  (default_ :string))
 
 (cl:export '#.(swig-lispify "terminal_get8" 'function))
 
@@ -841,7 +841,7 @@
 (cl:export '#.(swig-lispify "terminal_get32" 'function))
 
 (cffi:defcfun ("color_from_name8" #.(swig-lispify "color_from_name8" 'function)) color
-  (name :pointer))
+  (name :string))
 
 (cl:export '#.(swig-lispify "color_from_name8" 'function))
 
