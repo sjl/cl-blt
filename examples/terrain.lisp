@@ -1,9 +1,9 @@
-(in-package :cl-user)
-
 (ql:quickload '(:cl-blt :losh :iterate))
 
-(use-package :losh)
-(use-package :iterate)
+(defpackage :cl-blt.examples.terrain
+  (:use :cl :losh :iterate))
+
+(in-package :cl-blt.examples.terrain)
 
 ;;;; Heightmap ----------------------------------------------------------------
 (defconstant +world-exponent+ 9)

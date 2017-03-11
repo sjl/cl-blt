@@ -345,7 +345,7 @@ TERMINAL_INLINE const char* terminal_vsprintf(const char* s, va_list args)
 	else if (!buffer)
 		buffer = (char*)malloc(buffer_size);
 
-	while (true)
+	while (1)
 	{
 		buffer[buffer_size-1] = '\0';
 		rc = vsnprintf(buffer, buffer_size, s, args);
@@ -377,7 +377,7 @@ TERMINAL_INLINE const wchar_t* terminal_vswprintf(const wchar_t* s, va_list args
 	else if (!buffer)
 		buffer = (wchar_t*)malloc(buffer_size * sizeof(wchar_t));
 
-	while (true)
+	while (1)
 	{
 		buffer[buffer_size-1] = L'\0';
 #if defined(_WIN32)
