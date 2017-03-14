@@ -4,3 +4,4 @@ scratch.lisp
 *.png
 docs/build
 lib/
+lisp.prof
