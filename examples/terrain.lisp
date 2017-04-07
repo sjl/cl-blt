@@ -112,9 +112,9 @@
                  (y :from 0 :below (min +world-size+ (blt:height)))))
     (for height = (aref *heightmap* x y))
     (setf
-      (blt:color) (blt:rgbaf height height height 1.0)
+      (blt:color) (blt:rgba height height height 1.0)
       (blt:cell-char x y) (terrain-char height)))
-  (setf (blt:color) (blt:rgbaf 1.0 0.0 0.0 1.0))
+  (setf (blt:color) (blt:rgba 1.0 0.0 0.0 1.0))
   (pr (multiple-value-list (blt:print 1 1 (format nil "Demo!~%There is a lot of text in this line, will BLT manage to word wrap everything properly?  We'll see!")
                                       :width 50
                                       :height 10

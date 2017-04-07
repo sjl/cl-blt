@@ -5,7 +5,7 @@
 
 (in-package :cl-blt.examples.life)
 
-(defconstant +world-size+ 128)
+(defconstant +world-size+ 300)
 
 (deftype world-index ()
   `(integer 0 (,+world-size+)))
@@ -63,6 +63,7 @@
     (setf (aref next row col)
           (tick-cell cell (count-neighbors world row col)))))
 
+
 (defun draw (world)
   (iterate
     (with srows = (blt:height))
@@ -70,13 +71,16 @@
     (for (cell row col) :in-array world)
     (when (and (< row srows)
                (< col scols))
-      (setf (blt:cell-char col row)
-            (if (zerop cell) #\Space #\*))))
+      (if (zerop cell)
+        (setf (blt:color) (blt:rgbaf 0.1 0.1 0.1 1.0)
+              (blt:cell-char col row) #\.)
+        (setf (blt:color) (blt:rgbaf 1.0 1.0 0.0 1.0)
+              (blt:cell-char col row) #\*))))
   (blt:refresh))
 
 (defun config ()
   (blt:set "window.resizeable = true")
-  (blt:set "window.cellsize = 6x6")
+  (blt:set "window.cellsize = 3x4")
   (blt:set "window.title = LIFE"))
 
 (defun input ()

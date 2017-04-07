@@ -3,8 +3,6 @@
 ; (sb-int:set-floating-point-modes :traps nil)
 
 ;;;; Utils --------------------------------------------------------------------
-(declaim (inline color-float-to-byte rgba rgbaf))
-
 (defun pr (val)
   (format t "~S~%" val)
   (finish-output)
@@ -24,62 +22,103 @@
      <>))
 
 
-(deftype color-float ()
-  '(single-float 0.0 1.0))
+(defmacro defun-inline (name &body body)
+  "Like `defun`, but declaims `name` to be `inline`."
+  `(progn
+     (declaim (inline ,name))
+     (defun ,name ,@body)
+     ',name))
 
+
+;;;; Colors -------------------------------------------------------------------
 (deftype color-byte ()
   '(unsigned-byte 8))
 
-(deftype color ()
-  '(unsigned-byte 32))
+(deftype color-float ()
+  '(single-float 0.0 1.0))
 
 
-(defun color-float-to-byte (float)
-  (truncate (* float 255.0)))
+(declaim
+  (ftype (function (color-byte color-byte color-byte color-byte)
+                   (unsigned-byte 32)) rgba-byte%)
+  (ftype (function (color-float color-float color-float color-float)
+                   (unsigned-byte 32)) rgba-float%))
 
-(defun rgba (r g b a)
+
+(defun-inline color-float-to-byte (r)
+  (truncate (* r 255.0)))
+
+
+(defun rgba-byte% (r g b a)
   (-<> 0
     (dpb a (byte 8 24) <>)
     (dpb r (byte 8 16) <>)
     (dpb g (byte 8 8) <>)
     (dpb b (byte 8 0) <>)))
 
-(defun rgbaf (r g b a)
-  (declare (optimize speed)
-           (type color-float r g b a))
-  (rgba (color-float-to-byte r)
-        (color-float-to-byte g)
-        (color-float-to-byte b)
-        (color-float-to-byte a)))
+(defun rgba-float% (r g b a)
+  (rgba-byte% (color-float-to-byte r)
+              (color-float-to-byte g)
+              (color-float-to-byte b)
+              (color-float-to-byte a)))
+
+
+(defun rgba% (r g b a)
+  (assert (or (and (typep r 'color-byte)
+                   (typep g 'color-byte)
+                   (typep b 'color-byte)
+                   (typep a '(or null color-byte)))
+              (and (typep r 'color-float)
+                   (typep g 'color-float)
+                   (typep b 'color-float)
+                   (typep a '(or null color-float))))
+      (r g b a))
+  (etypecase r
+    (color-byte (rgba-byte% r g b (or a 255)))
+    (color-float (rgba-float% r g b (or a 1.0)))))
+
+(defun rgba (r g b &optional (a nil))
+  (rgba% r g b a))
+
+
+(define-compiler-macro rgba (&whole form r g b &optional (a nil))
+  (if (and (constantp r)
+           (constantp g)
+           (constantp b)
+           (constantp a))
+    (rgba% r g b a)
+    form))
+
 
 (defun color-name (color-name)
   (blt/ll:color-from-name color-name))
 
 
-(defun boolean-to-onoff (boolean)
+;;;; Type Conversion ----------------------------------------------------------
+(defun-inline boolean-to-onoff (boolean)
   (if boolean
     blt/ll:+tk-on+
     blt/ll:+tk-off+))
 
-(defun onoff-to-boolean (onoff)
+(defun-inline onoff-to-boolean (onoff)
   (ecase onoff
     (blt/ll:+tk-on+ t)
     (blt/ll:+tk-off+ nil)))
 
-(defun int-to-boolean (int)
+(defun-inline int-to-boolean (int)
   (not (zerop int)))
 
 
-(defun state-boolean (state)
+(defun-inline state-boolean (state)
   (int-to-boolean (blt/ll:terminal-state state)))
 
 
-(defun character-to-code-point (character)
+(defun-inline character-to-code-point (character)
   ;; These seem to work in SBCL, ABCL, CCL, and ECL, but I need to do more
   ;; digging before I'm convinced.
   (char-code character))
 
-(defun code-point-to-character (code-point)
+(defun-inline code-point-to-character (code-point)
   ;; These seem to work in SBCL, ABCL, CCL, and ECL, but I need to do more
   ;; digging before I'm convinced.
   (code-char code-point))
@@ -400,21 +439,3 @@
     `(cond ,@(loop :for (head . body) :in clauses
               :collect `(,(parse-key-case-head head data) ,@body)))))
 
-
-;;;; Scratch ------------------------------------------------------------------
-(defun test ()
-  (trivial-main-thread:with-body-in-main-thread (:blocking t)
-    (with-terminal
-      (refresh)
-      (set "input.filter = [keyboard+, mouse+]")
-      (loop
-        :for data = (read)
-        :do (pr data)
-        :while (key-case data
-                 ((:a :down) (pr "A down") t)
-                 ((:a :up) (pr "A up") t)
-                 ((:a :control) (pr "ctrl a") t)
-                 ((:b :control :shift) (pr "shift-ctrl b") t)
-                 ((:b :down :up) (pr "B down or up") t)
-                 (:escape nil)
-                 (t (pr "something else") t))))))
