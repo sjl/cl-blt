@@ -6,6 +6,11 @@
 (in-package :cl-blt.examples.box)
 
 ;;;; GUI ----------------------------------------------------------------------
+(defun clear-layer (layer)
+  (setf (blt:layer) layer)
+  (blt:clear-area 0 0 (blt:width) (blt:height)))
+
+
 (defun draw-background ()
   (setf (blt:layer) 0)
   (iterate (for-nested ((x :from 0 :below (truncate (blt:width) 2))
@@ -38,10 +43,9 @@
            (setf (blt:cell-char bx by) char)))
 
 
-(defun draw-box-background (x y w h layer)
-  (setf (blt:color) (blt:rgba 0 0 200)
-        (blt:layer) layer)
-  (draw-fill (1+ x) (1+ y) (1- w) (1- h))
+(defun draw-box-background (x y w h &optional (color (blt:rgba 0 0 0)))
+  (setf (blt:color) color)
+  (draw-fill (1+ x) (1+ y) (- w 2) (- h 2))
   (draw-outline x y w h
                 #\lower_half_block
                 #\upper_half_block
@@ -52,9 +56,8 @@
                 #\quadrant_upper_right
                 #\quadrant_upper_left))
 
-(defun draw-box-border (x y w h layer)
-  (setf (blt:color) (blt:rgba 255 255 255)
-        (blt:layer) (1+ layer))
+(defun draw-box-border (x y w h &optional (color (blt:rgba 255 255 255)))
+  (setf (blt:color) color)
   (draw-outline x y w h
                 #\box_drawings_double_horizontal
                 #\box_drawings_double_horizontal
@@ -65,28 +68,40 @@
                 #\box_drawings_double_up_and_right
                 #\box_drawings_double_up_and_left))
 
-(defun draw-box (x y w h contents layer)
-  (draw-box-background x y w h layer)
-  (draw-box-border x y w h layer)
-
-  (setf (blt:color) (blt:rgba 1.0 1.0 1.0)
-        (blt:layer) (+ layer 2))
-  (blt:clear-area x y w h)
+(defun draw-box-contents (x y w h contents
+                          &optional (color (blt:rgba 1.0 1.0 1.0)))
+  (setf (blt:color) color)
   (blt:print (1+ x) (1+ y)
-             (format nil "[font=tall]~S[/font]" contents)
+             (format nil "[font=normal]~A[/font]" contents)
              :width (- w 2) :height (- h 2)))
+
+(defun draw-box (x y w h contents layer)
+  (clear-layer layer)
+  (clear-layer (1+ layer))
+
+  (setf (blt:layer) layer
+        (blt:composition) t)
+  (draw-box-background x y w h)
+  (draw-box-border x y w h)
+
+  (setf (blt:layer) (1+ layer)
+        (blt:composition) nil)
+  (blt:clear-area x y w h)
+  (draw-box-contents x y w h contents))
 
 
 (defun draw ()
-  (draw-box 3 3 10 10 "hello, world! how close can we get here, what if we go over oh no!" 5)
+  (draw-box 3 3 20 10 (format nil "[color=red]hello~%world! how [font=italic]close[font=normal] can [font=bold]we[font=normal] get here, what if we go over oh no![/color]") 5)
   (blt:refresh))
 
 (defun config ()
-  (blt:set "tall font: ./examples/UbuntuMono/UbuntuMono-R.ttf, size=10x20, spacing=1x2, align=center;")
+  (blt:set "normal font: ./examples/UbuntuMono/UbuntuMono-R.ttf, size=10x20, spacing=1x2, align=center;")
+  (blt:set "italic font: ./examples/UbuntuMono/UbuntuMono-RI.ttf, size=10x20, spacing=1x2, align=center;")
+  (blt:set "bold font: ./examples/UbuntuMono/UbuntuMono-B.ttf, size=10x20, spacing=1x2, align=center;")
   (blt:set "font: ./examples/ProggySquare/ProggySquare.ttf, size=20x20, spacing=2x2, align=dead-center;")
   (blt:set "window.resizeable = false")
   (blt:set "window.cellsize = 10x10")
-  (blt:set "window.size = 30x20")
+  (blt:set "window.size = 80x50")
   (blt:set "window.title = Box Demo"))
 
 (defun main ()
