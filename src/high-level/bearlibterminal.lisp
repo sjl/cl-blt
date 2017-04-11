@@ -206,6 +206,16 @@
   new-value)
 
 
+(defun mouse-x ()
+  (blt/ll:terminal-state blt/ll:+tk-mouse-x+))
+
+(defun mouse-y ()
+  (blt/ll:terminal-state blt/ll:+tk-mouse-y+))
+
+(defun mouse ()
+  (values (blt/ll:terminal-state blt/ll:+tk-mouse-x+)
+          (blt/ll:terminal-state blt/ll:+tk-mouse-y+)))
+
 (defun has-input-p ()
   (int-to-boolean (blt/ll:terminal-has-input)))
 

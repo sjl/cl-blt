@@ -20,6 +20,9 @@
     :close
     :color
     :color-name
+    :mouse
+    :mouse-x
+    :mouse-y
     :composition
     :crop
     :has-input-p
