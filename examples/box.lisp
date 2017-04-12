@@ -1,4 +1,4 @@
-(ql:quickload '(:cl-blt :losh :iterate))
+(ql:quickload '(:cl-blt :losh :iterate :split-sequence))
 
 (defpackage :cl-blt.examples.box
   (:use :cl :losh :iterate))
@@ -90,8 +90,32 @@
   (draw-box-contents x y w h contents))
 
 
+(defun make-word-wrap-format-string (width)
+  ;; http://cybertiggyr.com/fmt/fmt.pdf
+  ;; unfortunately we can't use ~V in here so we'll just use concat instead
+  (concatenate 'string
+               "~{~<~%~1,"
+               ;; Format checks for strictly less than width, but it's more
+               ;; natural to give the width as an inclusive range...
+               (princ-to-string (1+ width))
+               ":;~A~>~^ ~}"))
+
+(defun word-wrap-line (line width)
+  (format nil (make-word-wrap-format-string width)
+          (split-sequence:split-sequence #\space line)))
+
+(defun word-wrap (string width)
+  (format nil "~{~A~^~%~}"
+          (iterate
+            (for line in (split-sequence:split-sequence #\newline string))
+            (collect (word-wrap-line line width)))))
+
+
 (defun draw ()
   (draw-box 3 3 20 10 (format nil "[color=red]hello~%world! how [font=italic]close[font=normal] can [font=bold]we[font=normal] get here, what if we go over oh no![/color]") 5)
+
+  (draw-box 30 3 40 30 (word-wrap "This is an test.  It has multiple words.  And some spaces too.  It should be wrapped correctly." 10) 7)
+
   (blt:refresh))
 
 (defun config ()
