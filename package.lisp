@@ -34,12 +34,15 @@
     :print
     :read
     :refresh
-    :rgba
-    :hsva
     :set
     :sleep
     :width
     :with-terminal
+
+    :rgba
+    :hsva
+    :color-to-rgba
+    :color-to-hsva
 
     )
   (:shadow

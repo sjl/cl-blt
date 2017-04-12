@@ -31,6 +31,9 @@
 
 
 ;;;; Colors -------------------------------------------------------------------
+(deftype color ()
+  '(unsigned-byte 32))
+
 (deftype color-byte ()
   '(unsigned-byte 8))
 
@@ -45,7 +48,17 @@
                    (unsigned-byte 32)) rgba-float%)
   (ftype (function (color-float color-float color-float)
                    (values color-float color-float color-float &optional))
-         hsv-to-rgb))
+         hsv-to-rgb rgb-to-hsv)
+  (ftype (function
+           (color)
+           (values color-byte color-byte color-byte color-byte &optional))
+         color-to-rgba-bytes
+         color-to-hsva-bytes)
+  (ftype (function
+           (color)
+           (values color-float color-float color-float color-float &optional))
+         color-to-rgba-floats
+         color-to-hsva-floats))
 
 
 (defun-inline hsv-to-rgb (h s v)
@@ -69,9 +82,67 @@
               (+ g m)
               (+ b m)))))
 
+(defun-inline rgb-to-hsv (r g b)
+  ;; http://www.rapidtables.com/convert/color/rgb-to-hsv.htm
+  (let* ((c-min (min r g b))
+         (c-max (max r g b))
+         (delta (- c-max c-min)))
+    (values
+      (* (/ 60 360)
+         (cond
+           ((zerop delta) 0.0)
+           ((= c-max r) (mod (/ (- g b) delta) 6.0))
+           ((= c-max g) (+ (/ (- b r) delta) 2.0))
+           ((= c-max b) (+ (/ (- r g) delta) 4.0))
+           (t 0.0)))
+      (if (zerop c-max)
+        0.0
+        (/ delta c-max))
+      c-max)))
 
-(defun-inline color-float-to-byte (r)
-  (truncate (* r 255.0)))
+
+(defun-inline color-float-to-byte (n)
+  (truncate (* n 255.0)))
+
+(defun-inline color-byte-to-float (n)
+  (/ n 255.0))
+
+
+(defun-inline color-to-rgba-bytes (color)
+  (values (ldb (byte 8 16) color)
+          (ldb (byte 8 8) color)
+          (ldb (byte 8 0) color)
+          (ldb (byte 8 24) color)))
+
+(defun-inline color-to-rgba-floats (color)
+  (multiple-value-bind (r g b a) (color-to-rgba-bytes color)
+    (values (color-byte-to-float r)
+            (color-byte-to-float g)
+            (color-byte-to-float b)
+            (color-byte-to-float a))))
+
+(defun-inline color-to-hsva-floats (color)
+  (multiple-value-bind (r g b a) (color-to-rgba-floats color)
+    (multiple-value-bind (h s v) (rgb-to-hsv r g b)
+      (values h s v a))))
+
+(defun-inline color-to-hsva-bytes (color)
+  (multiple-value-bind (h s v a) (color-to-hsva-floats color)
+    (values (color-float-to-byte h)
+            (color-float-to-byte s)
+            (color-float-to-byte v)
+            (color-float-to-byte a))))
+
+
+(defun color-to-rgba (color &optional float?)
+  (if float?
+    (color-to-rgba-floats color)
+    (color-to-rgba-bytes color)))
+
+(defun color-to-hsva (color &optional float?)
+  (if float?
+    (color-to-hsva-floats color)
+    (color-to-hsva-bytes color)))
 
 
 (defun-inline rgba-byte% (r g b a)
@@ -140,7 +211,7 @@
     (color-float (hsva-float% h s v (or a 1.0)))))
 
 (defun hsva (h s v &optional (a nil))
-  (rgba% h s v a))
+  (hsva% h s v a))
 
 
 (define-compiler-macro rgba (&whole form r g b &optional (a nil))

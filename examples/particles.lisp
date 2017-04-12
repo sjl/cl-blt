@@ -13,8 +13,8 @@
 
 
 ;;;; Utils --------------------------------------------------------------------
-(defun noop (particle ms)
-  (declare (ignore particle ms)))
+(defun noop (particle ms n)
+  (declare (ignore particle ms n)))
 
 (defun random-glyph ()
   (random-elt "*!#$%^&?.,-:;'/><(){}[]"))
@@ -29,28 +29,45 @@
   (x 0 :type fixnum)
   (y 0 :type fixnum))
 
-(defstruct particle
+(defstruct (particle (:constructor make-particle%))
   (x 0.0 :type single-float)
   (y 0.0 :type single-float)
   (glyph (random-glyph) :type character)
   (color (random-color) :type (unsigned-byte 32))
   (lifetime 1000 :type fixnum)
+  (remaining 0 :type fixnum)
   (transformer #'noop :type function))
 
+(defun make-particle (x y lifetime transformer)
+  (make-particle% :x x
+                  :y y
+                  :lifetime lifetime
+                  :remaining lifetime
+                  :transformer transformer))
 
 (defun update-particles (ms)
   (setf *particles*
         (delete-if (lambda (particle)
-                     (minusp (decf (particle-lifetime particle) ms)))
+                     (minusp (decf (particle-remaining particle) ms)))
                    *particles*))
   (mapc (lambda (particle)
-          (funcall (particle-transformer particle) particle ms))
+          (funcall (particle-transformer particle)
+                   particle
+                   ms
+                   (- 1.0 (/ (particle-remaining particle)
+                             (particle-lifetime particle)))))
         *particles*)
   'ok)
 
-(defun transform-drop (ms-per-cell particle ms)
+
+(defun transform-drop (ms-per-cell particle ms n)
   (incf (particle-y particle)
-        (/ ms ms-per-cell)))
+        (/ ms ms-per-cell))
+  (multiple-value-bind (h s v a)
+      (blt:color-to-hsva (particle-color particle) t)
+    (declare (ignore a))
+    (setf (particle-color particle)
+          (blt:hsva h s v (- 1.0 (expt n 4))))))
 
 
 (defun clear-layer (layer)
@@ -66,19 +83,17 @@
 
 
 (defun make-drop-particle (x y)
-  (make-particle
-    :x x
-    :y y
-    :lifetime (random-range 600 1000)
-    :transformer (losh::curry #'transform-drop (random-range 5 50))))
+  (make-particle x y
+                 (random-range 600 1000)
+                 (losh::curry #'transform-drop (random-range 10 50))))
 
 
 (defun add-particle ()
   (let ((x (coerce (mouse-x *mouse*) 'single-float))
         (y (coerce (mouse-y *mouse*) 'single-float)))
-    (iterate (repeat (random-range 1000 2000))
-             (push (make-drop-particle (+ x (random-range-inclusive -19.0 19.0))
-                                       (+ y (random-range-inclusive -19.0 19.0)))
+    (iterate (repeat (random-range 10 100))
+             (push (make-drop-particle (+ x (random-range-inclusive -9.0 9.0))
+                                       (+ y (random-range-inclusive -9.0 9.0)))
                    *particles*))))
 
 
@@ -117,7 +132,7 @@
 (defun config ()
   (blt:set "font: ./examples/ProggySquare/ProggySquare.ttf, size=20x20, spacing=2x2, align=dead-center;")
   (blt:set "input.filter = keyboard, mouse")
-  (blt:set "output.vsync = false")
+  (blt:set "output.vsync = true")
   (blt:set "window.resizeable = true")
   (blt:set "window.cellsize = 10x10")
   (blt:set "window.size = 80x50")
