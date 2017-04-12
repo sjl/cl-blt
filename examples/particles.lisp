@@ -13,6 +13,8 @@
 
 
 ;;;; Utils --------------------------------------------------------------------
+
+
 (defun noop (particle ms)
   (declare (ignore particle ms)))
 
@@ -20,11 +22,9 @@
   (random-elt "*!#?.,-:;'"))
 
 (defun random-color ()
-  (let ((v (random-range 0.5 1.0)))
-    (ecase (random 3)
-      (0 (blt:rgba 1.0 v v 1.0))
-      (1 (blt:rgba v 1.0 v 1.0))
-      (2 (blt:rgba v v 1.0 1.0)))))
+  (blt:hsva (random 1.0)
+            (random 1.0)
+            (random-range 0.5 1.0)))
 
 
 (defstruct mouse

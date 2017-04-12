@@ -35,7 +35,7 @@
     :read
     :refresh
     :rgba
-    :rgbaf
+    :hsva
     :set
     :sleep
     :width

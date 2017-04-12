@@ -42,25 +42,69 @@
   (ftype (function (color-byte color-byte color-byte color-byte)
                    (unsigned-byte 32)) rgba-byte%)
   (ftype (function (color-float color-float color-float color-float)
-                   (unsigned-byte 32)) rgba-float%))
+                   (unsigned-byte 32)) rgba-float%)
+  (ftype (function (color-float color-float color-float)
+                   (values color-float color-float color-float &optional))
+         hsv-to-rgb))
+
+
+(defun-inline hsv-to-rgb (h s v)
+  ;; https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
+  ;; look i don't know either mate i just transcribed the fuckin thing
+  (let* ((h (* h 360)) ; convert 0-1 to 0-360
+         (h% (/ h 60))
+         (c (* v s))
+         (x (* c (- 1 (abs (1- (mod h% 2))))))
+         (m (- v c)))
+    (multiple-value-bind (r g b)
+        (cond
+          ((<= h% 1) (values c x 0.0))
+          ((<= h% 2) (values x c 0.0))
+          ((<= h% 3) (values 0.0 c x))
+          ((<= h% 4) (values 0.0 x c))
+          ((<= h% 5) (values x 0.0 c))
+          ((<= h% 6) (values c 0.0 x))
+          (t (values 0.0 0.0 0.0)))
+      (values (+ r m)
+              (+ g m)
+              (+ b m)))))
 
 
 (defun-inline color-float-to-byte (r)
   (truncate (* r 255.0)))
 
 
-(defun rgba-byte% (r g b a)
+(defun-inline rgba-byte% (r g b a)
+  (declare (optimize speed)
+           (type color-byte r g b a))
   (-<> 0
     (dpb a (byte 8 24) <>)
     (dpb r (byte 8 16) <>)
     (dpb g (byte 8 8) <>)
     (dpb b (byte 8 0) <>)))
 
-(defun rgba-float% (r g b a)
+(defun-inline rgba-float% (r g b a)
+  (declare (optimize speed)
+           (type color-float r g b a))
   (rgba-byte% (color-float-to-byte r)
               (color-float-to-byte g)
               (color-float-to-byte b)
               (color-float-to-byte a)))
+
+
+(defun-inline hsva-float% (h s v a)
+  (declare (optimize speed)
+           (type color-float h s v a))
+  (multiple-value-bind (r g b) (hsv-to-rgb h s v)
+    (rgba-float% r g b a)))
+
+(defun-inline hsva-byte% (h s v a)
+  (declare (optimize speed)
+           (type color-byte h s v a))
+  (hsva-float% (/ h 255.0)
+               (/ s 255.0)
+               (/ v 255.0)
+               (/ a 255.0)))
 
 
 (defun rgba% (r g b a)
@@ -81,12 +125,38 @@
   (rgba% r g b a))
 
 
+(defun hsva% (h s v a)
+  (assert (or (and (typep h 'color-byte)
+                   (typep s 'color-byte)
+                   (typep v 'color-byte)
+                   (typep a '(or null color-byte)))
+              (and (typep h 'color-float)
+                   (typep s 'color-float)
+                   (typep v 'color-float)
+                   (typep a '(or null color-float))))
+      (h s v a))
+  (etypecase h
+    (color-byte (hsva-byte% h s v (or a 255)))
+    (color-float (hsva-float% h s v (or a 1.0)))))
+
+(defun hsva (h s v &optional (a nil))
+  (rgba% h s v a))
+
+
 (define-compiler-macro rgba (&whole form r g b &optional (a nil))
   (if (and (constantp r)
            (constantp g)
            (constantp b)
            (constantp a))
     (rgba% r g b a)
+    form))
+
+(define-compiler-macro hsva (&whole form h s v &optional (a nil))
+  (if (and (constantp h)
+           (constantp s)
+           (constantp v)
+           (constantp a))
+    (hsva% h s v a)
     form))
 
 
