@@ -13,13 +13,11 @@
 
 
 ;;;; Utils --------------------------------------------------------------------
-
-
 (defun noop (particle ms)
   (declare (ignore particle ms)))
 
 (defun random-glyph ()
-  (random-elt "*!#?.,-:;'"))
+  (random-elt "*!#$%^&?.,-:;'/><(){}[]"))
 
 (defun random-color ()
   (blt:hsva (random 1.0)
@@ -71,16 +69,16 @@
   (make-particle
     :x x
     :y y
-    :lifetime (random-range 600 2000)
-    :transformer (losh::curry #'transform-drop (random-range 15 50))))
+    :lifetime (random-range 600 1000)
+    :transformer (losh::curry #'transform-drop (random-range 5 50))))
 
 
 (defun add-particle ()
   (let ((x (coerce (mouse-x *mouse*) 'single-float))
         (y (coerce (mouse-y *mouse*) 'single-float)))
-    (iterate (repeat (random-range 10 30))
-             (push (make-drop-particle (+ x (random-range-inclusive -4.0 4.0))
-                                       (+ y (random-range-inclusive -4.0 4.0)))
+    (iterate (repeat (random-range 1000 2000))
+             (push (make-drop-particle (+ x (random-range-inclusive -19.0 19.0))
+                                       (+ y (random-range-inclusive -19.0 19.0)))
                    *particles*))))
 
 
