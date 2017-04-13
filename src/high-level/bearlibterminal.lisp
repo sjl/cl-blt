@@ -370,6 +370,11 @@
   (blt/ll:terminal-delay (truncate (* seconds 1000))))
 
 
+(defun character-input ()
+  (when (state-boolean blt/ll:+tk-wchar+)
+    (code-char (blt/ll:terminal-state blt/ll:+tk-wchar+))))
+
+
 (defun width ()
   (blt/ll:terminal-state blt/ll:+tk-width+))
 

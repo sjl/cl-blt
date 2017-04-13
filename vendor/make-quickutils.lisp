@@ -11,6 +11,7 @@
                :mkstr
                :once-only
                :rcurry
+               :read-file-into-string
                :symb
                :with-gensyms
 

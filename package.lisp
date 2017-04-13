@@ -15,34 +15,34 @@
     :cell-char
     :cell-code
     :cell-color
+    :character-input
     :clear
     :clear-area
     :close
     :color
     :color-name
-    :mouse
-    :mouse-x
-    :mouse-y
+    :color-to-hsva
+    :color-to-rgba
     :composition
     :crop
     :has-input-p
     :height
+    :hsva
     :key-case
     :layer
+    :mouse
+    :mouse-x
+    :mouse-y
     :open
     :peek
     :print
     :read
     :refresh
+    :rgba
     :set
     :sleep
     :width
     :with-terminal
-
-    :rgba
-    :hsva
-    :color-to-rgba
-    :color-to-hsva
 
     )
   (:shadow

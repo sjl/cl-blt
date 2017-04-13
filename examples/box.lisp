@@ -6,8 +6,9 @@
 (in-package :cl-blt.examples.box)
 
 ;;;; GUI ----------------------------------------------------------------------
-(defun clear-layer (layer)
-  (setf (blt:layer) layer)
+(defun clear-layer (&optional layer)
+  (when layer
+    (setf (blt:layer) layer))
   (blt:clear-area 0 0 (blt:width) (blt:height)))
 
 
@@ -15,7 +16,7 @@
   (setf (blt:layer) 0)
   (iterate (for-nested ((x :from 0 :below (truncate (blt:width) 2))
                         (y :from 0 :below (truncate (blt:height) 2))))
-           (for color = (random-range 0.5 0.9))
+           (for color = (random-range 0.1 0.3))
            (setf (blt:color) (blt:rgba color color color)
                  (blt:cell-char (* 2 x) (* 2 y))
                  (random-elt "abcdefghijklmnopqrstuvwxyz"))))
@@ -111,6 +112,50 @@
             (collect (word-wrap-line line width)))))
 
 
+(defun read-string (x y maximum-length &key (font ""))
+  (let ((result (make-array maximum-length
+                  :element-type 'character
+                  :fill-pointer 0)))
+    ;; Have to do the `print` fuckery so non-1x1 fonts work right.
+    (labels ((draw-string ()
+               (blt:print x y (format nil "[font=~A]~V,,,'_A[/font]"
+                                      font maximum-length result))))
+      (iterate
+        (clear-layer)
+        (draw-string)
+        (blt:refresh)
+        (blt:key-case (blt:read)
+          (:escape (return))
+          (:close (return))
+          (:enter (return result))
+          (:backspace (when (plusp (length result))
+                        (vector-pop result)))
+          (t (let ((char (blt:character-input)))
+               (when (and char (< (length result) maximum-length))
+                 (vector-push char result)))))
+        (blt:refresh)
+        (finally-protected (clear-layer)
+                           (blt:refresh))))))
+
+(defun get-user-input (x y layer prompt maximum-length)
+  (draw-box x y (+ 3 (max (length prompt)
+                          maximum-length))
+            6
+            prompt
+            layer)
+  (setf (blt:layer) (+ layer 2))
+  (prog1 (read-string (+ x 1)
+                      (+ y 3)
+                      maximum-length
+                      :font "normal")
+    (clear-layer layer)
+    (clear-layer (1+ layer))))
+
+(defun get-name ()
+  (clear-layer 15)
+  (pr (get-user-input 0 10 10 "What is your name?" 15)))
+
+
 (defun draw ()
   (draw-box 3 3 20 10 (format nil "[color=red]hello~%world! how [font=italic]close[font=normal] can [font=bold]we[font=normal] get here, what if we go over oh no![/color]") 5)
 
@@ -136,5 +181,6 @@
       (draw)
       (blt:key-case (blt:read)
         (:space (draw-background))
+        (:enter (get-name))
         (:escape (return))
         (:close (return))))))
