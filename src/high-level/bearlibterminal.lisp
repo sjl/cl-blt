@@ -30,6 +30,28 @@
      ',name))
 
 
+(defmacro save-value (thing &body body)
+  (with-gensyms (old)
+    `(let ((,old (,thing)))
+       (prog1
+           (progn ,@body)
+         (setf (,thing) ,old)))))
+
+(defmacro save-values (things &body body)
+  (if (null things)
+    `(progn ,@body)
+    `(save-value ,(first things)
+       (save-values ,(rest things) ,@body))))
+
+(defmacro with-value ((thing value) &body body)
+  (with-gensyms (old)
+    `(let ((,old (,thing)))
+       (setf (,thing) ,value)
+       (prog1
+           (progn ,@body)
+         (setf (,thing) ,old)))))
+
+
 ;;;; Colors -------------------------------------------------------------------
 (deftype color ()
   '(unsigned-byte 32))
@@ -243,8 +265,8 @@
 
 (defun-inline onoff-to-boolean (onoff)
   (ecase onoff
-    (blt/ll:+tk-on+ t)
-    (blt/ll:+tk-off+ nil)))
+    (#.blt/ll:+tk-on+ t)
+    (#.blt/ll:+tk-off+ nil)))
 
 (defun-inline int-to-boolean (int)
   (not (zerop int)))
@@ -280,6 +302,12 @@
     ((:middle :center) blt/ll:+tk-align-middle+)))
 
 
+(defun signed-to-unsigned (integer)
+  ;; bearlibterminal's terminal_state returns a signed integer, but some of the
+  ;; state values (e.g. colors) need to be unsigned integers.
+  (+ integer (expt 2 32)))
+
+
 ;;;; Error Checking -----------------------------------------------------------
 (define-condition bearlibterminal-error (error) ())
 
@@ -304,19 +332,6 @@
   (check (blt/ll:terminal-set-8 configuration-string)))
 
 
-(defun refresh ()
-  (blt/ll:terminal-refresh))
-
-(defun clear ()
-  (blt/ll:terminal-clear))
-
-(defun clear-area (x y width height)
-  (blt/ll:terminal-clear-area x y width height))
-
-(defun crop (x y width height)
-  (blt/ll:terminal-crop x y width height))
-
-
 (defun layer ()
   (blt/ll:terminal-state blt/ll:+tk-layer+))
 
@@ -325,18 +340,45 @@
   new-value)
 
 
+(defun refresh ()
+  (blt/ll:terminal-refresh))
+
+
+(defun clear ()
+  (blt/ll:terminal-clear))
+
+(defun clear-area (x y width height)
+  (blt/ll:terminal-clear-area x y width height))
+
+(defun clear-current-layer ()
+  (clear-area 0 0 (blt:width) (blt:height)))
+
+(defun clear-layer (&optional layer)
+  "Clear `layer`, or the current layer if not given."
+  (if layer
+    (with-value (blt:layer layer)
+      (clear-current-layer))
+    (clear-current-layer)))
+
+
+(defun crop (x y width height)
+  (blt/ll:terminal-crop x y width height))
+
+
 (defun color ()
-  (blt/ll:terminal-state blt/ll:+tk-color+))
+  (signed-to-unsigned (blt/ll:terminal-state blt/ll:+tk-color+)))
 
 (defun (setf color) (color)
-  (blt/ll:terminal-color color))
+  (blt/ll:terminal-color color)
+  color)
 
 
 (defun background-color ()
-  (blt/ll:terminal-state blt/ll:+tk-bkcolor+))
+  (signed-to-unsigned (blt/ll:terminal-state blt/ll:+tk-bkcolor+)))
 
 (defun (setf background-color) (color)
-  (blt/ll:terminal-bkcolor color))
+  (blt/ll:terminal-bkcolor color)
+  color)
 
 
 (defun composition ()
@@ -394,10 +436,12 @@
 
 
 (defun (setf cell-code) (code-point x y)
-  (blt/ll:terminal-put x y code-point))
+  (blt/ll:terminal-put x y code-point)
+  code-point)
 
 (defun (setf cell-char) (character x y)
-  (blt/ll:terminal-put x y (character-to-code-point character)))
+  (blt/ll:terminal-put x y (character-to-code-point character))
+  character)
 
 
 (defun cell-color (x y &optional (index 0))

@@ -18,4 +18,5 @@
                 ((:module "low-level" :serial t
                   :components ((:file "bearlibterminal")))
                  (:module "high-level" :serial t
-                  :components ((:file "bearlibterminal")))))))
+                  :components ((:file "bearlibterminal")
+                               (:file "boxes")))))))

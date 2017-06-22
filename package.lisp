@@ -44,6 +44,8 @@
     :width
     :with-terminal
 
+    :draw-box
+
     )
   (:shadow
 

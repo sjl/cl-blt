@@ -1,16 +1,9 @@
 (ql:quickload '(:cl-blt :losh :iterate :split-sequence))
 
 (defpackage :cl-blt.examples.box
-  (:use :cl :losh :iterate))
+  (:use :cl :losh :iterate :bearlibterminal.quickutils))
 
 (in-package :cl-blt.examples.box)
-
-;;;; GUI ----------------------------------------------------------------------
-(defun clear-layer (&optional layer)
-  (when layer
-    (setf (blt:layer) layer))
-  (blt:clear-area 0 0 (blt:width) (blt:height)))
-
 
 (defun draw-background ()
   (setf (blt:layer) 0)
@@ -22,94 +15,51 @@
                  (random-elt "abcdefghijklmnopqrstuvwxyz"))))
 
 
-(defun draw-outline (x y w h
-                     top bottom left right
-                     top-left top-right
-                     bot-left bot-right)
-  (iterate (for bx :from (1+ x) :below (+ x w -1))
-           (setf (blt:cell-char bx y) top
-                 (blt:cell-char bx (+ y h -1)) bottom))
-  (iterate (for by :from (1+ y) :below (+ y h -1))
-           (setf (blt:cell-char x by) left
-                 (blt:cell-char (+ x w -1) by) right))
-  (setf
-    (blt:cell-char x y) top-left
-    (blt:cell-char (+ x w -1) y) top-right
-    (blt:cell-char x (+ y h -1)) bot-left
-    (blt:cell-char (+ x w -1) (+ y h -1)) bot-right))
-
-(defun draw-fill (x y w h &optional (char #\full_block))
-  (iterate (for-nested ((bx :from x :below (+ x w))
-                        (by :from y :below (+ y h))))
-           (setf (blt:cell-char bx by) char)))
-
-
-(defun draw-box-background (x y w h &optional (color (blt:rgba 0 0 0)))
-  (setf (blt:color) color)
-  (draw-fill (1+ x) (1+ y) (- w 2) (- h 2))
-  (draw-outline x y w h
-                #\lower_half_block
-                #\upper_half_block
-                #\right_half_block
-                #\left_half_block
-                #\quadrant_lower_right
-                #\quadrant_lower_left
-                #\quadrant_upper_right
-                #\quadrant_upper_left))
-
-(defun draw-box-border (x y w h &optional (color (blt:rgba 255 255 255)))
-  (setf (blt:color) color)
-  (draw-outline x y w h
-                #\box_drawings_double_horizontal
-                #\box_drawings_double_horizontal
-                #\box_drawings_double_vertical
-                #\box_drawings_double_vertical
-                #\box_drawings_double_down_and_right
-                #\box_drawings_double_down_and_left
-                #\box_drawings_double_up_and_right
-                #\box_drawings_double_up_and_left))
-
-(defun draw-box-contents (x y w h contents
-                          &optional (color (blt:rgba 1.0 1.0 1.0)))
-  (setf (blt:color) color)
-  (blt:print (1+ x) (1+ y)
-             (format nil "[font=normal]~A[/font]" contents)
-             :width (- w 2) :height (- h 2)))
-
-(defun draw-box (x y w h contents layer)
-  (clear-layer layer)
-  (clear-layer (1+ layer))
-
-  (setf (blt:layer) layer
-        (blt:composition) t)
-  (draw-box-background x y w h)
-  (draw-box-border x y w h)
-
-  (setf (blt:layer) (1+ layer)
-        (blt:composition) nil)
-  (blt:clear-area x y w h)
-  (draw-box-contents x y w h contents))
-
-
-(defun make-word-wrap-format-string (width)
-  ;; http://cybertiggyr.com/fmt/fmt.pdf
-  ;; unfortunately we can't use ~V in here so we'll just use concat instead
-  (concatenate 'string
-               "~{~<~%~1,"
-               ;; Format checks for strictly less than width, but it's more
-               ;; natural to give the width as an inclusive range...
-               (princ-to-string (1+ width))
-               ":;~A~>~^ ~}"))
 
 (defun word-wrap-line (line width)
-  (format nil (make-word-wrap-format-string width)
-          (split-sequence:split-sequence #\space line)))
+  (with-output-to-string (*standard-output*)
+    (let ((pos 0)
+          (spaces 0)
+          (words (split-sequence:split-sequence #\space line)))
+      (flet ((add (s)
+               (incf pos (length s))
+               (princ s))
+             (linebreak ()
+               (setf pos 0 spaces 0)
+               (terpri)))
+        (iterate
+          (until (null words))
+          (for word = (pop words))
+          (for len = (length word))
+          (cond
+            ;; chomp leading whitespace
+            ((and (zerop pos) (zerop len))
+             nil)
+            ;; if we have multiple spaces in a row, preserve them (maybe)
+            ((zerop len)
+             (incf spaces))
+            ;; if we're dealing with a single word that's too long, reluctantly
+            ;; split it into pieces
+            ((and (zerop pos) (> len width))
+             (add (subseq word 0 width))
+             (linebreak)
+             (push (subseq word width) words))
+            ;; if this would send us beyond the limit, break
+            ((> (+ spaces len pos) width)
+             (linebreak)
+             (push word words))
+            ;; otherwise concat
+            (t
+             (add (make-string spaces :initial-element #\space))
+             (add word)
+             (setf spaces 1))))))))
 
 (defun word-wrap (string width)
   (format nil "~{~A~^~%~}"
           (iterate
             (for line in (split-sequence:split-sequence #\newline string))
             (collect (word-wrap-line line width)))))
+
 
 
 (defun read-string (x y maximum-length &key (font ""))
@@ -121,7 +71,7 @@
                (blt:print x y (format nil "[font=~A]~V,,,'_A[/font]"
                                       font maximum-length result))))
       (iterate
-        (clear-layer)
+        (blt::clear-layer)
         (draw-string)
         (blt:refresh)
         (blt:key-case (blt:read)
@@ -134,33 +84,42 @@
                (when (and char (< (length result) maximum-length))
                  (vector-push char result)))))
         (blt:refresh)
-        (finally-protected (clear-layer)
+        (finally-protected (blt::clear-layer)
                            (blt:refresh))))))
 
 (defun get-user-input (x y layer prompt maximum-length)
-  (draw-box x y (+ 3 (max (length prompt)
-                          maximum-length))
-            6
-            prompt
-            layer)
+  (blt:draw-box layer x y (+ 3 (max (length prompt)
+                                    maximum-length))
+                6
+                prompt
+                :border-color (blt:rgba 1.0 1.0 1.0)
+                :background-color (blt:rgba 0.4 0.0 0.0))
   (setf (blt:layer) (+ layer 2))
   (prog1 (read-string (+ x 1)
                       (+ y 3)
                       maximum-length
                       :font "normal")
-    (clear-layer layer)
-    (clear-layer (1+ layer))))
+    (blt::clear-layer layer)
+    (blt::clear-layer (1+ layer))))
 
 (defun get-name ()
-  (clear-layer 15)
-  (pr (get-user-input 0 10 10 "What is your name?" 15)))
+  (blt::clear-layer 15)
+  (pr (get-user-input 0 10 10 "[font=normal]What is your name?[/font]" 15)))
 
 
 (defun draw ()
-  (draw-box 3 3 20 10 (format nil "[color=red]hello~%world! how [font=italic]close[font=normal] can [font=bold]we[font=normal] get here, what if we go over oh no![/color]") 5)
+  (setf (blt:color) (blt:rgba 1.0 1.0 0.0))
 
-  (draw-box 30 3 40 30 (word-wrap "This is an test.  It has multiple words.  And some spaces too.  It should be wrapped correctly." 10) 7)
+  (blt:draw-box 5 3 3 20 10
+                (format nil "[font=normal][color=red]hello~%world! how [font=italic]close[font=normal] can [font=bold]we[font=normal] get here, what if we go over oh no![/color]"))
 
+  (blt:draw-box 7 30 3 42 30
+                (word-wrap (format nil "123456789x123456789x123456789x more?~% ~%~
+                                    This is an test.  It has multiple words.  ~
+                                    And some spaces too.  It should be wrapped correctly.~%~
+                                    foo foo foo foo  foos     and a bar")
+                           20)
+                :border (random-elt '(:light :heavy :double)))
   (blt:refresh))
 
 (defun config ()
