@@ -390,6 +390,13 @@
   new-value)
 
 
+(defun (setf font) (new-value)
+  (blt/ll:terminal-font-8 (if (null new-value)
+                            ""
+                            new-value))
+  new-value)
+
+
 (defun mouse-x ()
   (blt/ll:terminal-state blt/ll:+tk-mouse-x+))
 

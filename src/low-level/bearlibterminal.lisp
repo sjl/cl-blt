@@ -677,6 +677,21 @@
 
 (cl:export '#.(swig-lispify "terminal_composition" 'function))
 
+(cffi:defcfun ("terminal_font8" #.(swig-lispify "terminal_font8" 'function)) :void
+  (name :string))
+
+(cl:export '#.(swig-lispify "terminal_font8" 'function))
+
+(cffi:defcfun ("terminal_font16" #.(swig-lispify "terminal_font16" 'function)) :void
+  (name :pointer))
+
+(cl:export '#.(swig-lispify "terminal_font16" 'function))
+
+(cffi:defcfun ("terminal_font32" #.(swig-lispify "terminal_font32" 'function)) :void
+  (name :pointer))
+
+(cl:export '#.(swig-lispify "terminal_font32" 'function))
+
 (cffi:defcfun ("terminal_put" #.(swig-lispify "terminal_put" 'function)) :void
   (x :int)
   (y :int)
@@ -901,6 +916,16 @@
   &rest)
 
 (cl:export '#.(swig-lispify "terminal_wsetf" 'function))
+
+(cffi:defcfun ("terminal_font" #.(swig-lispify "terminal_font" 'function)) :void
+  (name :string))
+
+(cl:export '#.(swig-lispify "terminal_font" 'function))
+
+(cffi:defcfun ("terminal_wfont" #.(swig-lispify "terminal_wfont" 'function)) :void
+  (name :pointer))
+
+(cl:export '#.(swig-lispify "terminal_wfont" 'function))
 
 (cffi:defcfun ("terminal_print" #.(swig-lispify "terminal_print" 'function)) #.(swig-lispify "dimensions_t" 'classname)
   (x :int)

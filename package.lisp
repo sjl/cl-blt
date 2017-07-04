@@ -27,6 +27,7 @@
     :color-to-rgba
     :composition
     :crop
+    :font
     :has-input-p
     :height
     :hsva
