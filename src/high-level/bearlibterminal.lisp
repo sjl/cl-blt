@@ -328,8 +328,9 @@
 (defun close ()
   (blt/ll:terminal-close))
 
-(defun set (configuration-string)
-  (check (blt/ll:terminal-set-8 configuration-string)))
+(defun set (configuration-string &rest format-arguments)
+  (check (blt/ll:terminal-set-8
+           (apply #'format nil configuration-string format-arguments))))
 
 
 (defun layer ()

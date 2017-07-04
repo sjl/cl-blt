@@ -86,8 +86,8 @@
                  (border-color (blt:rgba 255 255 255)))
   "Draw a box.
 
-  Two layers will be used to draw the box: `layer` and `(1+ layer)`, and they
-  will be cleared before drawing it.
+  The box will be draw on `layer`, and the necessary area will be cleared before
+  doing so.
 
   The border of the box will be one cell wide/tall.  `border` specifies the type
   of border to draw, and can be one of `:light`, `:heavy`, or `:double`, or
@@ -99,18 +99,18 @@
   The `width` and `height` measurements include the two border cells.  For
   example: a `width` of `10` would have `8` cells of content space.
 
-  `contents` will be `print`ed inside the box with the appropriate bounds.
+  `contents` will be `print`ed inside the box with the appropriate bounds.  The
+  color, font, etc will all be whatever they are currently set to.
 
   **EXPERIMENTAL**: This function is experimental and may change or be remove
   entirely in the future.
 
   "
   (save-values (blt:composition blt:layer)
-    (clear-layer layer)
-    (clear-layer (1+ layer))
-
     (setf (blt:layer) layer
           (blt:composition) t)
+
+    (clear-area x y width height)
 
     (save-value blt:color
       (when background-color
@@ -121,7 +121,5 @@
           (:heavy (draw-box-border-heavy x y width height border-color))
           (:double (draw-box-border-double x y width height border-color)))))
 
-    (setf (blt:layer) (1+ layer)
-          (blt:composition) nil)
     (draw-box-contents x y width height contents)))
 

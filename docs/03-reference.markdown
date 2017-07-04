@@ -14,6 +14,167 @@ don't touch it.
 
 This package contains a high-level, lispy interface to bearlibterminal.  It has the nickname `blt` for easy prefixing.
 
+### `BACKGROUND-COLOR` (function)
+
+    (BACKGROUND-COLOR)
+
+### `CELL-BACKGROUND-COLOR` (function)
+
+    (CELL-BACKGROUND-COLOR X Y)
+
+### `CELL-CHAR` (function)
+
+    (CELL-CHAR X Y &OPTIONAL (INDEX 0))
+
+### `CELL-CODE` (function)
+
+    (CELL-CODE X Y &OPTIONAL (INDEX 0))
+
+### `CELL-COLOR` (function)
+
+    (CELL-COLOR X Y &OPTIONAL (INDEX 0))
+
+### `CHARACTER-INPUT` (function)
+
+    (CHARACTER-INPUT)
+
+### `CLEAR` (function)
+
+    (CLEAR)
+
+### `CLEAR-AREA` (function)
+
+    (CLEAR-AREA X Y WIDTH HEIGHT)
+
+### `CLOSE` (function)
+
+    (CLOSE)
+
+### `COLOR`
+
+`#<STANDARD-CLASS DOCPARSER:TYPE-NODE>`
+
+### `COLOR-NAME` (function)
+
+    (COLOR-NAME COLOR-NAME)
+
+### `COLOR-TO-HSVA` (function)
+
+    (COLOR-TO-HSVA COLOR &OPTIONAL FLOAT?)
+
+### `COLOR-TO-RGBA` (function)
+
+    (COLOR-TO-RGBA COLOR &OPTIONAL FLOAT?)
+
+### `COMPOSITION` (function)
+
+    (COMPOSITION)
+
+### `CROP` (function)
+
+    (CROP X Y WIDTH HEIGHT)
+
+### `DRAW-BOX` (function)
+
+    (DRAW-BOX LAYER X Y WIDTH HEIGHT CONTENTS &KEY (BORDER :LIGHT)
+              (BACKGROUND-COLOR (RGBA 0 0 0)) (BORDER-COLOR (RGBA 255 255 255)))
+
+Draw a box.
+
+  Two layers will be used to draw the box: `layer` and `(1+ layer)`, and they
+  will be cleared before drawing it.
+
+  The border of the box will be one cell wide/tall.  `border` specifies the type
+  of border to draw, and can be one of `:light`, `:heavy`, or `:double`, or
+  `nil` for a transparent border.
+
+  `background-color` and `border-color` specify the colors to use.  If `nil` is
+  given they will not be drawn.
+
+  The `width` and `height` measurements include the two border cells.  For
+  example: a `width` of `10` would have `8` cells of content space.
+
+  `contents` will be `print`ed inside the box with the appropriate bounds.
+
+  **EXPERIMENTAL**: This function is experimental and may change or be remove
+  entirely in the future.
+
+  
+
+### `HAS-INPUT-P` (function)
+
+    (HAS-INPUT-P)
+
+### `HEIGHT` (function)
+
+    (HEIGHT)
+
+### `HSVA` (function)
+
+    (HSVA H S V &OPTIONAL (A NIL))
+
+### `KEY-CASE` (macro)
+
+    (KEY-CASE DATA &REST CLAUSES)
+
+### `LAYER` (function)
+
+    (LAYER)
+
+### `MOUSE` (function)
+
+    (MOUSE)
+
+### `MOUSE-X` (function)
+
+    (MOUSE-X)
+
+### `MOUSE-Y` (function)
+
+    (MOUSE-Y)
+
+### `OPEN` (function)
+
+    (OPEN)
+
+### `PEEK` (function)
+
+    (PEEK)
+
+### `PRINT` (function)
+
+    (PRINT X Y STRING &KEY WIDTH HEIGHT (HALIGN :DEFAULT) (VALIGN :DEFAULT))
+
+### `READ` (function)
+
+    (READ)
+
+### `REFRESH` (function)
+
+    (REFRESH)
+
+### `RGBA` (function)
+
+    (RGBA R G B &OPTIONAL (A NIL))
+
+### `SET` (function)
+
+    (SET CONFIGURATION-STRING)
+
+### `SLEEP` (function)
+
+    (SLEEP SECONDS)
+
+### `WIDTH` (function)
+
+    (WIDTH)
+
+### `WITH-TERMINAL` (macro)
+
+    (WITH-TERMINAL
+      &BODY
+      BODY)
+
 ## Package `BEARLIBTERMINAL/LOW-LEVEL`
 
 This package contains the low-level, SWIG-generated wrapper functions for bearlibterminal.

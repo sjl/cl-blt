@@ -9,6 +9,7 @@
 (defpackage :bearlibterminal/high-level
   (:use :cl :bearlibterminal.quickutils)
   (:export
+    :bearlibterminal
 
     :background-color
     :cell-background-color
@@ -18,6 +19,7 @@
     :character-input
     :clear
     :clear-area
+    :clear-layer
     :close
     :color
     :color-name

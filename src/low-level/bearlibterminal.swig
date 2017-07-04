@@ -5,10 +5,11 @@
 
 (cffi:defctype color :uint)
 
-(cffi:define-foreign-library bearlibterminal
-  (:darwin "lib/libBearLibTerminal.dylib"))
+(cffi:define-foreign-library blt:bearlibterminal
+  (:darwin (:or "Contents/Frameworks/libBearLibTerminal.dylib"
+                "lib/libBearLibTerminal.dylib")))
 
-(cffi:use-foreign-library bearlibterminal)
+(cffi:use-foreign-library blt:bearlibterminal)
 %}
 
 %feature("intern_function","1");
