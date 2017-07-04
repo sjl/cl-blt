@@ -116,10 +116,11 @@
       (when background-color
         (draw-box-background x y width height background-color))
       (when (and border border-color)
-        (ecase border
-          (:light (draw-box-border-light x y width height border-color))
-          (:heavy (draw-box-border-heavy x y width height border-color))
-          (:double (draw-box-border-double x y width height border-color)))))
+        (funcall (ecase border
+                   (:light #'draw-box-border-light)
+                   (:heavy #'draw-box-border-heavy)
+                   (:double #'draw-box-border-double))
+                 x y width height border-color)))
 
     (draw-box-contents x y width height contents)))
 
