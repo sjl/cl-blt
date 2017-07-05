@@ -23,18 +23,19 @@
                   :do (setf (blt:cell-char bx by) #\full_block))))
 
 
-(defun draw-box-background (x y w h color)
+(defun draw-box-background (x y w h color outline?)
   (setf (blt:color) color)
   (draw-box-fill (1+ x) (1+ y) (- w 2) (- h 2))
-  (draw-box-outline x y w h
-                    #\lower_half_block
-                    #\upper_half_block
-                    #\right_half_block
-                    #\left_half_block
-                    #\quadrant_lower_right
-                    #\quadrant_lower_left
-                    #\quadrant_upper_right
-                    #\quadrant_upper_left))
+  (when outline?
+    (draw-box-outline x y w h
+                      #\lower_half_block
+                      #\upper_half_block
+                      #\right_half_block
+                      #\left_half_block
+                      #\quadrant_lower_right
+                      #\quadrant_lower_left
+                      #\quadrant_upper_right
+                      #\quadrant_upper_left)))
 
 
 (defun draw-box-border-light (x y w h color)
@@ -72,6 +73,18 @@
                     #\box_drawings_double_down_and_left
                     #\box_drawings_double_up_and_right
                     #\box_drawings_double_up_and_left))
+
+(defun draw-box-border-block (x y w h color)
+  (setf (blt:color) color)
+  (draw-box-outline x y w h
+                    #\full_block
+                    #\full_block
+                    #\full_block
+                    #\full_block
+                    #\full_block
+                    #\full_block
+                    #\full_block
+                    #\full_block))
 
 
 (defun draw-box-contents (x y w h contents)
@@ -114,12 +127,14 @@
 
     (save-value blt:color
       (when background-color
-        (draw-box-background x y width height background-color))
+        (draw-box-background x y width height background-color
+                             (and border border-color)))
       (when (and border border-color)
         (funcall (ecase border
                    (:light #'draw-box-border-light)
                    (:heavy #'draw-box-border-heavy)
-                   (:double #'draw-box-border-double))
+                   (:double #'draw-box-border-double)
+                   (:block #'draw-box-border-block))
                  x y width height border-color)))
 
     (draw-box-contents x y width height contents)))
