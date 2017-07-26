@@ -47,6 +47,19 @@
     :width
     :with-terminal
 
+    :black
+    :blue
+    :chartreuse
+    :cyan
+    :gray
+    :green
+    :magenta
+    :orange
+    :purple
+    :red
+    :white
+    :yellow
+
     :draw-box
 
     )

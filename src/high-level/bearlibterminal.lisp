@@ -257,6 +257,65 @@
   (blt/ll:color-from-name color-name))
 
 
+;;; Convenience Functions
+(defun-inline normalize-color-argument (x)
+  (if (floatp x)
+    (color-float-to-byte x)
+    x))
+
+
+(defun-inline gray% (value alpha)
+  (hsva (normalize-color-argument 0)
+        (normalize-color-argument 0)
+        (normalize-color-argument value)
+        (normalize-color-argument alpha)))
+
+(defmacro define-grayscale-function (color-name default-value)
+  `(progn
+     (defun ,color-name (&key (value ,default-value) (alpha 1.0))
+       (gray% value alpha))
+
+     (define-compiler-macro ,color-name (&whole form &key (value ,default-value) (alpha 1.0))
+       (if (and (constantp value)
+                (constantp alpha))
+         (gray% value alpha)
+         form))))
+
+(define-grayscale-function white 1.0)
+(define-grayscale-function black 0.0)
+(define-grayscale-function gray 0.5)
+
+(defmacro define-color-function (color-name hue)
+  (let ((color-name% (symb color-name '%)))
+    `(progn
+       (defun-inline ,color-name% (saturation value alpha)
+         (hsva (normalize-color-argument ,hue)
+               (normalize-color-argument saturation)
+               (normalize-color-argument value)
+               (normalize-color-argument alpha)))
+
+       (defun ,color-name (&key (saturation 1.0) (value 1.0) (alpha 1.0))
+         (,color-name% saturation value alpha))
+
+       (define-compiler-macro ,color-name (&whole form &key (saturation 1.0) (value 1.0) (alpha 1.0))
+         (if (and (constantp saturation)
+                  (constantp value)
+                  (constantp alpha))
+           (,color-name% saturation value alpha)
+           form)))))
+
+
+(define-color-function red        0.000)
+(define-color-function orange     0.083)
+(define-color-function yellow     0.167)
+(define-color-function chartreuse 0.250)
+(define-color-function green      0.333)
+(define-color-function cyan       0.500)
+(define-color-function blue       0.666)
+(define-color-function purple     0.750)
+(define-color-function magenta    0.833)
+
+
 ;;;; Type Conversion ----------------------------------------------------------
 (defun-inline boolean-to-onoff (boolean)
   (if boolean
