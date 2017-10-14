@@ -26,7 +26,7 @@
 (defun draw-box-background (x y w h color outline?)
   (setf (blt:color) color)
   (draw-box-fill (1+ x) (1+ y) (- w 2) (- h 2))
-  (when outline?
+  (if outline?
     (draw-box-outline x y w h
                       #\lower_half_block
                       #\upper_half_block
@@ -35,7 +35,16 @@
                       #\quadrant_lower_right
                       #\quadrant_lower_left
                       #\quadrant_upper_right
-                      #\quadrant_upper_left)))
+                      #\quadrant_upper_left)
+    (draw-box-outline x y w h
+                      #\full_block
+                      #\full_block
+                      #\full_block
+                      #\full_block
+                      #\full_block
+                      #\full_block
+                      #\full_block
+                      #\full_block)))
 
 
 (defun draw-box-border-light (x y w h color)
@@ -93,49 +102,46 @@
              :height (- h 2)))
 
 
-(defun draw-box (layer x y width height contents &key
+(defun draw-box (x y width height &key
+                 (contents nil)
                  (border :light)
                  (background-color (blt:rgba 0 0 0))
                  (border-color (blt:rgba 255 255 255)))
   "Draw a box.
 
-  The box will be draw on `layer`, and the necessary area will be cleared before
-  doing so.
+  The border of the box, if present, will be one cell wide/tall.
 
-  The border of the box will be one cell wide/tall.  `border` specifies the type
-  of border to draw, and can be one of `:light`, `:heavy`, or `:double`, or
-  `nil` for a transparent border.
+  `border` specifies the type of border to draw, and can be one of `:light`,
+  `:heavy`, or `:double`, or `nil` for no border.
 
   `background-color` and `border-color` specify the colors to use.  If `nil` is
   given they will not be drawn.
 
-  The `width` and `height` measurements include the two border cells.  For
-  example: a `width` of `10` would have `8` cells of content space.
+  The `width` and `height` measurements include the two border cells, if
+  present.  For example: a `width` of `10` would have `8` cells of content
+  space with a border.
 
-  `contents` will be `print`ed inside the box with the appropriate bounds.  The
-  color, font, etc will all be whatever they are currently set to.
+  If given, `contents` will be `print`ed inside the box with the appropriate
+  bounds.  The color, font, etc will all be whatever they are currently set to.
 
   **EXPERIMENTAL**: This function is experimental and may change or be remove
   entirely in the future.
 
   "
-  (save-values (blt:composition blt:layer)
-    (setf (blt:layer) layer
-          (blt:composition) t)
+  (save-value blt:composition
+    (setf (blt:composition) t)
 
-    (clear-area x y width height)
+    (when background-color
+      (draw-box-background x y width height background-color
+                           (and border border-color)))
+    (when (and border border-color)
+      (funcall (ecase border
+                 (:light #'draw-box-border-light)
+                 (:heavy #'draw-box-border-heavy)
+                 (:double #'draw-box-border-double)
+                 (:block #'draw-box-border-block))
+               x y width height border-color))
 
-    (save-value blt:color
-      (when background-color
-        (draw-box-background x y width height background-color
-                             (and border border-color)))
-      (when (and border border-color)
-        (funcall (ecase border
-                   (:light #'draw-box-border-light)
-                   (:heavy #'draw-box-border-heavy)
-                   (:double #'draw-box-border-double)
-                   (:block #'draw-box-border-block))
-                 x y width height border-color)))
-
-    (draw-box-contents x y width height contents)))
+    (when contents
+      (draw-box-contents x y width height contents))))
 

@@ -666,40 +666,44 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun parse-key-case-head (head data-symbol)
-    (if (eq t head)
-      t
-      (destructuring-bind (event &rest modifiers)
-          (ensure-list head)
-        (let* ((up (member :up modifiers))
-               (down (member :down modifiers))
-               (up/down (cond ((and up down) :both)
-                              (up :up)
-                              (down :down)
-                              (t :down)))
-               (shift (ensure-boolean
-                        (member :shift modifiers)))
-               (alt (ensure-boolean
-                      (intersection modifiers
-                                    '(:alt :option :meta))))
-               (control (ensure-boolean
-                          (intersection modifiers
-                                        '(:control :command)))))
-          `(and
-             ,(ecase up/down
-                (:both `(eql (logand ,data-symbol
-                                     ,(lognot blt/ll:+tk-key-released+))
-                          ,(find-integer event)))
-                (:up   `(eql ,data-symbol
-                          ,(logior (find-integer event)
-                                   blt/ll:+tk-key-released+)))
-                (:down `(eql ,data-symbol
-                          ,(find-integer event))))
-             (,(if shift 'progn 'not)
-              (state-boolean blt/ll:+tk-shift+))
-             (,(if control 'progn 'not)
-              (state-boolean blt/ll:+tk-control+))
-             (,(if alt 'progn 'not)
-              (state-boolean blt/ll:+tk-alt+))))))))
+    (flet ((parse-condition (condition)
+             (destructuring-bind (event &rest modifiers)
+                 (ensure-list condition)
+               (let* ((up (member :up modifiers))
+                      (down (member :down modifiers))
+                      (up/down (cond ((and up down) :both)
+                                     (up :up)
+                                     (down :down)
+                                     (t :down)))
+                      (shift (ensure-boolean
+                               (member :shift modifiers)))
+                      (alt (ensure-boolean
+                             (intersection modifiers
+                                           '(:alt :option :meta))))
+                      (control (ensure-boolean
+                                 (intersection modifiers
+                                               '(:control :command :ctrl)))))
+                 `(and
+                    ,(ecase up/down
+                       (:both `(eql (logand ,data-symbol
+                                            ,(lognot blt/ll:+tk-key-released+))
+                                 ,(find-integer event)))
+                       (:up   `(eql ,data-symbol
+                                 ,(logior (find-integer event)
+                                          blt/ll:+tk-key-released+)))
+                       (:down `(eql ,data-symbol
+                                 ,(find-integer event))))
+                    (,(if shift 'progn 'not)
+                     (state-boolean blt/ll:+tk-shift+))
+                    (,(if control 'progn 'not)
+                     (state-boolean blt/ll:+tk-control+))
+                    (,(if alt 'progn 'not)
+                     (state-boolean blt/ll:+tk-alt+)))))))
+      (cond
+        ((eq t head) t)
+        ((and (consp head) (eq (first head) 'or))
+         `(or ,@(mapcar #'parse-condition (rest head))))
+        (t (parse-condition head))))))
 
 (defmacro key-case (data &rest clauses)
   (once-only (data)
