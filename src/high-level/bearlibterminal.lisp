@@ -502,12 +502,14 @@
     (when code (code-point-to-character code))))
 
 
-(defun (setf cell-code) (code-point x y)
-  (blt/ll:terminal-put x y code-point)
+(defun (setf cell-code) (code-point x y &optional (dx 0) (dy 0))
+  (blt/ll:terminal-put-ext x y dx dy code-point (cffi:null-pointer))
   code-point)
 
-(defun (setf cell-char) (character x y)
-  (blt/ll:terminal-put x y (character-to-code-point character))
+(defun (setf cell-char) (character x y &optional (dx 0) (dy 0))
+  (blt/ll:terminal-put-ext x y dx dy
+                           (character-to-code-point character)
+                           (cffi:null-pointer))
   character)
 
 
