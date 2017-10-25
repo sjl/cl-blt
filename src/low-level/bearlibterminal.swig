@@ -6,6 +6,8 @@
 (cffi:defctype color :uint)
 
 (cffi:define-foreign-library blt:bearlibterminal
+  (:linux (:or "libBearLibTerminal.so"
+               "lib/libBearLibTerminal.so"))
   (:darwin (:or "Contents/Resources/libBearLibTerminal.dylib"
                 "libBearLibTerminal.dylib"
                 "lib/libBearLibTerminal.dylib")))
