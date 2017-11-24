@@ -18,6 +18,14 @@ This package contains a high-level, lispy interface to bearlibterminal.  It has 
 
     (BACKGROUND-COLOR)
 
+### `BLACK` (function)
+
+    (BLACK &KEY (VALUE 0.0) (ALPHA 1.0))
+
+### `BLUE` (function)
+
+    (BLUE &KEY (SATURATION 1.0) (VALUE 1.0) (ALPHA 1.0))
+
 ### `CELL-BACKGROUND-COLOR` (function)
 
     (CELL-BACKGROUND-COLOR X Y)
@@ -38,6 +46,10 @@ This package contains a high-level, lispy interface to bearlibterminal.  It has 
 
     (CHARACTER-INPUT)
 
+### `CHARTREUSE` (function)
+
+    (CHARTREUSE &KEY (SATURATION 1.0) (VALUE 1.0) (ALPHA 1.0))
+
 ### `CLEAR` (function)
 
     (CLEAR)
@@ -45,6 +57,12 @@ This package contains a high-level, lispy interface to bearlibterminal.  It has 
 ### `CLEAR-AREA` (function)
 
     (CLEAR-AREA X Y WIDTH HEIGHT)
+
+### `CLEAR-LAYER` (function)
+
+    (CLEAR-LAYER &OPTIONAL LAYER)
+
+Clear `layer`, or the current layer if not given.
 
 ### `CLOSE` (function)
 
@@ -74,32 +92,48 @@ This package contains a high-level, lispy interface to bearlibterminal.  It has 
 
     (CROP X Y WIDTH HEIGHT)
 
+### `CYAN` (function)
+
+    (CYAN &KEY (SATURATION 1.0) (VALUE 1.0) (ALPHA 1.0))
+
 ### `DRAW-BOX` (function)
 
-    (DRAW-BOX LAYER X Y WIDTH HEIGHT CONTENTS &KEY (BORDER :LIGHT)
+    (DRAW-BOX X Y WIDTH HEIGHT &KEY (CONTENTS NIL) (BORDER :LIGHT)
               (BACKGROUND-COLOR (RGBA 0 0 0)) (BORDER-COLOR (RGBA 255 255 255)))
 
 Draw a box.
 
-  Two layers will be used to draw the box: `layer` and `(1+ layer)`, and they
-  will be cleared before drawing it.
+  The border of the box, if present, will be one cell wide/tall.
 
-  The border of the box will be one cell wide/tall.  `border` specifies the type
-  of border to draw, and can be one of `:light`, `:heavy`, or `:double`, or
-  `nil` for a transparent border.
+  `border` specifies the type of border to draw, and can be one of `:light`,
+  `:heavy`, or `:double`, or `nil` for no border.
 
   `background-color` and `border-color` specify the colors to use.  If `nil` is
   given they will not be drawn.
 
-  The `width` and `height` measurements include the two border cells.  For
-  example: a `width` of `10` would have `8` cells of content space.
+  The `width` and `height` measurements include the two border cells, if
+  present.  For example: a `width` of `10` would have `8` cells of content
+  space with a border.
 
-  `contents` will be `print`ed inside the box with the appropriate bounds.
+  If given, `contents` will be `print`ed inside the box with the appropriate
+  bounds.  The color, font, etc will all be whatever they are currently set to.
 
   **EXPERIMENTAL**: This function is experimental and may change or be remove
   entirely in the future.
 
   
+
+### `FONT` (function)
+
+    (FONT NEW-VALUE)
+
+### `GRAY` (function)
+
+    (GRAY &KEY (VALUE 0.5) (ALPHA 1.0))
+
+### `GREEN` (function)
+
+    (GREEN &KEY (SATURATION 1.0) (VALUE 1.0) (ALPHA 1.0))
 
 ### `HAS-INPUT-P` (function)
 
@@ -121,6 +155,10 @@ Draw a box.
 
     (LAYER)
 
+### `MAGENTA` (function)
+
+    (MAGENTA &KEY (SATURATION 1.0) (VALUE 1.0) (ALPHA 1.0))
+
 ### `MOUSE` (function)
 
     (MOUSE)
@@ -137,6 +175,10 @@ Draw a box.
 
     (OPEN)
 
+### `ORANGE` (function)
+
+    (ORANGE &KEY (SATURATION 1.0) (VALUE 1.0) (ALPHA 1.0))
+
 ### `PEEK` (function)
 
     (PEEK)
@@ -145,9 +187,17 @@ Draw a box.
 
     (PRINT X Y STRING &KEY WIDTH HEIGHT (HALIGN :DEFAULT) (VALIGN :DEFAULT))
 
+### `PURPLE` (function)
+
+    (PURPLE &KEY (SATURATION 1.0) (VALUE 1.0) (ALPHA 1.0))
+
 ### `READ` (function)
 
     (READ)
+
+### `RED` (function)
+
+    (RED &KEY (SATURATION 1.0) (VALUE 1.0) (ALPHA 1.0))
 
 ### `REFRESH` (function)
 
@@ -159,11 +209,15 @@ Draw a box.
 
 ### `SET` (function)
 
-    (SET CONFIGURATION-STRING)
+    (SET CONFIGURATION-STRING &REST FORMAT-ARGUMENTS)
 
 ### `SLEEP` (function)
 
     (SLEEP SECONDS)
+
+### `WHITE` (function)
+
+    (WHITE &KEY (VALUE 1.0) (ALPHA 1.0))
 
 ### `WIDTH` (function)
 
@@ -174,6 +228,10 @@ Draw a box.
     (WITH-TERMINAL
       &BODY
       BODY)
+
+### `YELLOW` (function)
+
+    (YELLOW &KEY (SATURATION 1.0) (VALUE 1.0) (ALPHA 1.0))
 
 ## Package `BEARLIBTERMINAL/LOW-LEVEL`
 
@@ -517,6 +575,22 @@ This package contains the low-level, SWIG-generated wrapper functions for bearli
 
     (TERMINAL-DELAY)
 
+### `TERMINAL-FONT` (function)
+
+    (TERMINAL-FONT)
+
+### `TERMINAL-FONT-16` (function)
+
+    (TERMINAL-FONT-16)
+
+### `TERMINAL-FONT-32` (function)
+
+    (TERMINAL-FONT-32)
+
+### `TERMINAL-FONT-8` (function)
+
+    (TERMINAL-FONT-8)
+
 ### `TERMINAL-GET` (function)
 
     (TERMINAL-GET)
@@ -684,6 +758,10 @@ This package contains the low-level, SWIG-generated wrapper functions for bearli
 ### `TERMINAL-VSWPRINTF` (function)
 
     (TERMINAL-VSWPRINTF)
+
+### `TERMINAL-WFONT` (function)
+
+    (TERMINAL-WFONT)
 
 ### `TERMINAL-WGET` (function)
 
