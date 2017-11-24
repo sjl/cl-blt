@@ -3,6 +3,6 @@ generate low-level bindings and provides a higher-level, Lispier interface on
 top of them.
 
 * **License:** MIT/X11
-* **Documentation:** <http://sjl.bitbucket.org/cl-blt/>
+* **Documentation:** <https://sjl.bitbucket.io/cl-blt/>
 * **Mercurial:** <http://bitbucket.org/sjl/cl-blt/>
 * **Git:** <http://github.com/sjl/cl-blt/>
