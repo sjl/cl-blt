@@ -2,6 +2,8 @@
 generate low-level bindings and provides a higher-level, Lispier interface on
 top of them.
 
+**It's still in development and undocumented.  Use at your own risk.**
+
 * **License:** MIT/X11
 * **Documentation:** <https://sjl.bitbucket.io/cl-blt/>
 * **Mercurial:** <http://bitbucket.org/sjl/cl-blt/>
