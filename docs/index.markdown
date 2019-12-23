@@ -5,6 +5,6 @@ top of them.
 **It's still in development and undocumented.  Use at your own risk.**
 
 * **License:** MIT/X11
-* **Documentation:** <https://sjl.bitbucket.io/cl-blt/>
-* **Mercurial:** <http://bitbucket.org/sjl/cl-blt/>
+* **Documentation:** <https://docs.stevelosh.com/cl-blt/>
+* **Mercurial:** <https://hg.sr.ht/~sjl/cl-blt/>
 * **Git:** <http://github.com/sjl/cl-blt/>
