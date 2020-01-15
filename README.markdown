@@ -6,5 +6,5 @@ top of them.
 
 * **License:** MIT/X11
 * **Documentation:** <https://docs.stevelosh.com/cl-blt/>
-* **Mercurial:** <https://hg.sr.ht/~sjl/cl-blt/>
+* **Mercurial:** <https://hg.stevelosh.com/cl-blt/>
 * **Git:** <https://github.com/sjl/cl-blt/>
